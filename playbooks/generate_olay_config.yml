@@ -1,0 +1,32 @@
+---
+- name: Make directories/cleanup 
+  hosts: leafs_DC2,spines_DC2
+  tasks:
+  - name: Register variables (underlay)
+    include_vars:
+      file: "{{lookup('env','PWD')}}/vars/underlay.yml"
+      name: underlay
+  - name: Create config directory
+    file:
+      path: "{{lookup('env','PWD')}}/configs/{{inventory_hostname}}"
+      state: directory
+  - name: Delete old config file (if exists)
+    file: 
+      path: "{{lookup('env','PWD')}}/configs/{{inventory_hostname}}/{{inventory_hostname}}_final.cfg"
+      state: absent
+
+- name: Create leaf configurations for underlay and VXLAN tenants
+  hosts: leafs_DC2
+  tasks: 
+  - name: Register variables (underlay)
+    include_vars:
+      file: "{{lookup('env','PWD')}}/vars/underlay.yml"
+      name: underlay
+  - name: Register VXLAN variables
+    include_vars:
+      file: "{{lookup('env','PWD')}}/vars/VXLAN.yml"
+      name: VXLAN
+  - name: Create VXLAN Configuration
+    template: 
+      src: "{{lookup('env','PWD')}}/templates/VXLAN.j2"
+      dest: "{{lookup('env','PWD')}}/configs/{{inventory_hostname}}/{{inventory_hostname}}_VXLAN.cfg"

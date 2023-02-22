@@ -1,0 +1,52 @@
+---
+- name: Make directories/cleanup 
+  hosts: leafs_DC2,spines_DC2
+  tasks:
+  - name: Register variables (underlay)
+    include_vars:
+      file: "{{lookup('env','PWD')}}/vars/underlay.yml"
+      name: underlay
+  - name: Create config directory
+    file:
+      path: "{{lookup('env','PWD')}}/configs/{{inventory_hostname}}"
+      state: directory
+  - name: Delete old config file (if exists)
+    file: 
+      path: "{{lookup('env','PWD')}}/configs/{{inventory_hostname}}/{{inventory_hostname}}_final.cfg"
+      state: absent
+
+- name: Create Interface config
+  hosts: leafs_DC2, spines_DC2
+  tasks:
+  - name: Register variables (underlay)
+    include_vars:
+      file: "{{lookup('env','PWD')}}/vars/underlay.yml"
+      name: underlay
+  - name: Create Interface Configs
+    template: 
+      src: "{{lookup('env','PWD')}}/templates/interfaces.j2"
+      dest: "{{lookup('env','PWD')}}/configs/{{inventory_hostname}}/{{inventory_hostname}}_interface.cfg"
+  
+- name: Create leaf configurations for underlay 
+  hosts: leafs_DC2
+  tasks: 
+  - name: Register variables (underlay)
+    include_vars:
+      file: "{{lookup('env','PWD')}}/vars/underlay.yml"
+      name: underlay
+  - name: Create Leaf EVPN Underlay config
+    template: 
+      src: "{{lookup('env','PWD')}}/templates/leaf_EVPN.j2"
+      dest: "{{lookup('env','PWD')}}/configs/{{inventory_hostname}}/{{inventory_hostname}}_EVPN_underlay.cfg"
+
+- name: Create spine configurations for underlay
+  hosts: spines_DC2
+  tasks: 
+  - name: Register variables (underlay)
+    include_vars:
+      file: "{{lookup('env','PWD')}}/vars/underlay.yml"
+      name: underlay
+  - name: Create Spine EVPN Underlay config
+    template: 
+      src: "{{lookup('env','PWD')}}/templates/spine_EVPN.j2"
+      dest: "{{lookup('env','PWD')}}/configs/{{inventory_hostname}}/{{inventory_hostname}}_EVPN_underlay.cfg"
